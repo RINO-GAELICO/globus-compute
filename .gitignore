@@ -1,0 +1,8 @@
+# ignore all file that ends with .env
+*.env
+
+# ignore all file that ends with .txt
+*.txt
+
+# ignore directory that starts with . in their name
+.*/*
