@@ -1,14 +1,19 @@
 from globus_compute_sdk import Executor
+from dotenv import load_dotenv
+import os
+
+# env variables
+ENV_PATH = "./globus_torch.env"
+load_dotenv(dotenv_path=ENV_PATH)
+perlmutter_endpoint = os.getenv("ENDPOINT_ID")
 
 
-from globus_compute_sdk import Executor
-
+# test function to add two numbers
 def double():
     return 9
 
-tutorial_endpoint_id = '199d0b45-5243-4301-a28c-118b3f3f0e6d'
-
-with Executor(endpoint_id=tutorial_endpoint_id) as gce:
+# ... then create the executor, ...
+with Executor(endpoint_id=perlmutter_endpoint) as gce:
     fut = gce.submit(double)
 
     print(fut.result())

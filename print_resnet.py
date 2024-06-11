@@ -7,6 +7,7 @@ gc = Client()
 
 ENV_PATH = "./resnet.env"
 load_dotenv(dotenv_path=ENV_PATH)
+perlmutter_endpoint = os.getenv("ENDPOINT_ID")
 
 def print_results(outfiles=["./resnet_batch.json"]):
 
@@ -24,20 +25,14 @@ def print_results(outfiles=["./resnet_batch.json"]):
                 task_id = [tid for tid in results_batch][0]
                 result_task = gc.get_result(task_id)
                 print(result_task)
-                print(gc.get_endpoint_status('f21e18ef-1350-4ded-b1fd-580a13222468'))
+                print(gc.get_endpoint_status(perlmutter_endpoint))
             except KeyError:
                 print(f"Functions in {outfile} have not completed")
                 # print error message
-                print(gc.get_endpoint_status('f21e18ef-1350-4ded-b1fd-580a13222468'))
+                print(gc.get_endpoint_status(perlmutter_endpoint))
                 continue
     print("Results batch: ", results_batch)
-    print("Status: ", gc.get_endpoint_status('f21e18ef-1350-4ded-b1fd-580a13222468'))
-            
-            
-           
-            
-    
-
+    print("Status: ", gc.get_endpoint_status(perlmutter_endpoint))
         
 
 if __name__ == '__main__':
