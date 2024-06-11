@@ -6,3 +6,5 @@
 
 # ignore directory that starts with . in their name
 .*/*
+
+.DS_Store
