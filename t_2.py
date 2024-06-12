@@ -7,8 +7,7 @@ ENV_PATH = "./globus_torch.env"
 load_dotenv(dotenv_path=ENV_PATH)
 perlmutter_endpoint = os.getenv("ENDPOINT_ID")
 
-
-# test function to add two numbers
+# test function
 def double():
     return 9
 

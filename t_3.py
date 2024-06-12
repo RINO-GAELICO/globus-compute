@@ -1,5 +1,5 @@
 from globus_compute_sdk import Client
-from dotenv import load_dotenv'
+from dotenv import load_dotenv
 import os
 
 gcc = Client()
