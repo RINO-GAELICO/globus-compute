@@ -52,17 +52,6 @@ def infer_image(image_path):
     import sys
     import subprocess
     import os
-    
-    try:
-        __import__('pathlib2')
-    except ImportError:
-        print(f"Installing 'pathlib2'...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pathlib2"])
-        __import__('pathlib2')
-        
-        
-    
-    
     import torch
     from PIL import Image
     from torchvision import transforms
@@ -77,17 +66,6 @@ def infer_image(image_path):
     #     return f"File not found in this working directory. Current working directory: {os.getcwd()}"
     
 
-    p = Path('.')
-    
-    results = []
-
-    results.append(f"Current working directory: {p.cwd()}")
-    # list subdirectories
-    results.append(f"Subdirectories: {list(p.iterdir())}")
-    # list python files
-    # results.append(f"Python files: {list(p.glob('**/*.py'))}")
-    
-    return results
     
 
     # Load the model
@@ -135,41 +113,11 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
     
     
     # original single execution
-    # future = gce.submit(infer_image, image_path)
-    # print(gce.get_worker_hardware_details())
-    # result = future.result()
+    future = gce.submit(infer_image, image_path)
+    print(gce.get_worker_hardware_details())
+    result = future.result()
     
-    # print(result)
-    
-    # an attempt to run the function multiple times
-    estimates = []
-    submission_times = []
-
-    for i in range(1):
-        submission_time = datetime.datetime.now()
-        future = gce.submit(infer_image, image_path)
-        estimates.append(future)
-        submission_times.append(submission_time)
-    
-    # Get the results and record completion times
-    completion_times = []
-    results = []
-
-    for future in estimates:
-        result = future.result()
-        completion_time = datetime.datetime.now()
-        results.append(result)
-        completion_times.append(completion_time)    
-        
-    # Print the submission and completion times
-    for i in range(1):
-        print(f"Future {i+1}: Submitted at {submission_times[i]}, Completed at {completion_times[i]}, Result: {results[i]}")
-        
-    # get the results and calculate the total
-    total_results = results
-
-    # Print all results
-    print("All results: {}".format(total_results))
+    print(result)
    
 
 

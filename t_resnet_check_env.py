@@ -5,7 +5,8 @@ import json
 from dotenv import load_dotenv
 import os
 
-ENV_PATH = "./globus_torch.env"
+# ENV_PATH = "./globus_torch.env"
+ENV_PATH = "./globus_torch_container.env"
 load_dotenv(dotenv_path=ENV_PATH)
 
 c= Client(code_serialization_strategy=CombinedCode())
