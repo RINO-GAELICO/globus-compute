@@ -1,0 +1,27 @@
+{
+    "results": [
+        "Function ID: 3 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 18.87372350692749\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n",
+        "Function ID: 2 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 18.874631881713867\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n",
+        "Function ID: 1 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 18.874093294143677\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n",
+        "Function ID: 4 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 0.471327543258667\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n",
+        "Function ID: 0 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 18.875123262405396\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n",
+        "Function ID: 5 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 0.4620094299316406\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n",
+        "Function ID: 7 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 0.46142005920410156\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n",
+        "Function ID: 6 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 0.35500431060791016\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n",
+        "Function ID: 9 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 0.34604454040527344\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n",
+        "Function ID: 8 \n Results: [('Samoyed', 0.8851830363273621), ('Arctic fox', 0.045603856444358826), ('white wolf', 0.044082142412662506)] \n Execution Time: 0.3743124008178711\nEnvironment: {'cuda_available': True, 'device': 'cuda', 'model_name': 'resnet18'} \n"
+    ],
+    "completion_times": [
+        "2024-06-17T11:32:28.724692",
+        "2024-06-17T11:32:29.226729",
+        "2024-06-17T11:32:29.226937",
+        "2024-06-17T11:32:29.226982",
+        "2024-06-17T11:32:29.227016",
+        "2024-06-17T11:32:29.728934",
+        "2024-06-17T11:32:29.729123",
+        "2024-06-17T11:32:29.729170",
+        "2024-06-17T11:32:30.231018",
+        "2024-06-17T11:32:30.231217"
+    ],
+    "func_ids": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+}

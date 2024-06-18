@@ -1,11 +1,15 @@
 from globus_compute_sdk.serialize import CombinedCode
 from globus_compute_sdk import Client
 from globus_compute_sdk import Executor
+from dotenv import load_dotenv
 from PIL import Image
+import concurrent.futures
 import json
 import datetime
-from dotenv import load_dotenv
 import os
+
+
+NUMBER_OF_FUNCTIONS = 10
 
 # ENV_PATH = "./globus_torch.env"
 ENV_PATH = "./globus_torch_container.env"
@@ -17,7 +21,7 @@ c= Client(code_serialization_strategy=CombinedCode())
 # TODO time function
 
 
-def infer_image(input_image, categories_str):
+def infer_image(input_image, categories_str, func_id):
     
     import time
 
@@ -59,8 +63,10 @@ def infer_image(input_image, categories_str):
     categories = [s.strip() for s in categories_str.splitlines()]
 
     # Get top 5 categories
-    top3_prob, top5_catid = torch.topk(probabilities, 3)
-    results = [(categories[top5_catid[i]], top3_prob[i].item()) for i in range(top3_prob.size(0))]
+    top3_prob, top3_catid = torch.topk(probabilities, 3)
+    
+    # We should do this part once we are back in the main thread
+    results = [(categories[top3_catid[i]], top3_prob[i].item()) for i in range(top3_prob.size(0))]
 
     # End timing
     end_time = time.time()
@@ -76,7 +82,8 @@ def infer_image(input_image, categories_str):
     return {
         "results": results,
         "time_execution": execution_time,
-        "environment": environment
+        "environment": environment,
+        "func_id": func_id
     }
 
 
@@ -97,16 +104,46 @@ categories_file_path = 'imagenet_classes.txt'
 categories_str = read_file_to_string(categories_file_path)
 
 with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
+    
     image_path = 'dog.jpg'
-    image_bytes = image_to_bytes(image_path)
     
     input_image = Image.open(image_path)
-    # original single execution
-    future = gce.submit(infer_image, input_image, categories_str)
+    
+    
+    # an attempt to run the function multiple times
+    futures_addresses = []
+    submission_times = []
 
-    result = future.result()
+    for i in range(NUMBER_OF_FUNCTIONS):
+        submission_time = datetime.datetime.now()
+        future = gce.submit(infer_image, input_image, categories_str, i)
+        futures_addresses.append(future)
+        submission_times.append(submission_time)
+    
+    # Get the results and record completion times
+    completion_times = []
+    results = []
+
+    for future in concurrent.futures.as_completed(futures_addresses):
+        result = future.result()
+        completion_time = datetime.datetime.now()
+        results.append(result)
+        completion_times.append(completion_time)    
         
-    print(result)
+    # Print the submission and completion times
+    for i in range(NUMBER_OF_FUNCTIONS):
+        print(f"Future {i+1}: Submitted at {submission_times[i]}, Completed at {completion_times[i]}, Result: {results[i]}")
+        
+    # get the results and calculate the total
+    total_results = results
+
+    # format the results
+    formatted_results = []
+    for result in total_results:
+        formatted_results.append(f"Function ID: {result['func_id']} \n Results: {result['results']} \n Execution Time: {result['time_execution']}\nEnvironment: {result['environment']} \n ")
+        
+    # Print all results
+    print("All results: {}".format(formatted_results))
    
 
 

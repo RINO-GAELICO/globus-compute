@@ -5,7 +5,7 @@ import os
 
 gc = Client()
 
-ENV_PATH = "./resnet.env"
+ENV_PATH = "./globus_torch.env"
 load_dotenv(dotenv_path=ENV_PATH)
 perlmutter_endpoint = os.getenv("ENDPOINT_ID")
 

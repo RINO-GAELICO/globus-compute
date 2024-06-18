@@ -8,3 +8,8 @@
 .*/*
 
 .DS_Store
+
+# ignore all file that starts with results_
+results_*
+
+time_*
