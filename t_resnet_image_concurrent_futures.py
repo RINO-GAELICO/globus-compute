@@ -13,8 +13,22 @@ import sys
 # Number of functions to run
 NUMBER_OF_FUNCTIONS = int(sys.argv[1])
 
-ENV_PATH = "./globus_torch_container.env"
+# if no number of functions is provided, it will raise an error
+if NUMBER_OF_FUNCTIONS is None:
+    raise ValueError("Please provide the number of functions to run")
+
+# name of the endpoint from second argument
+ENDPOINT_NAME = sys.argv[2]
+
+# env path is "./{name from second argument}.env"
+ENV_PATH = "./" + ENDPOINT_NAME + ".env"
+
+# if the path is not correct, it will raise an error
+if not os.path.exists(ENV_PATH):
+    raise FileNotFoundError(f"File {ENV_PATH} not found")
 load_dotenv(dotenv_path=ENV_PATH)
+
+
 c = Client(code_serialization_strategy=CombinedCode())
 
 def infer_image(input_image, func_id):
@@ -24,6 +38,11 @@ def infer_image(input_image, func_id):
     from torchvision import transforms
     import torch
 
+    # THIS CODE IS JUST TEMPORARY TO CHECK IN WHICH NODE THE JOB IS RUNNING
+    # # # # # # # # # # # # # # # #
+    import os
+    node_name = os.getenv('SLURMD_NODENAME')
+    # # # # # # # # # # # # # # # #
     
     # Load the model
     model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
@@ -70,12 +89,10 @@ def infer_image(input_image, func_id):
         "start_time": start_time,
         "end_time": end_time,
         "environment": environment,
-        "func_id": func_id
+        "func_id": func_id,
+        "node_name": node_name
     }
 
-def image_to_bytes(image_path):
-    with open(image_path, "rb") as image_file:
-        return image_file.read()
 
 def read_file_to_string(file_path):
     with open(file_path, "r") as file:
@@ -88,6 +105,7 @@ categories_file_path = 'imagenet_classes.txt'
 categories_str = read_file_to_string(categories_file_path)
 
 with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
+    
     image_path = 'dog.jpg'
     input_image = Image.open(image_path)
     
@@ -103,8 +121,6 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
         submission_times.update({i: submission_time})
     
     # Get the results and record completion times
-   
-
     for future in concurrent.futures.as_completed(futures_addresses):
         result = future.result()
         completion_time = datetime.datetime.now()
@@ -115,8 +131,7 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
     # Use the categories string to get the categories list
     categories = [s.strip() for s in categories_str.splitlines()]
 
-    # Process results in the main thread
-    # create a dictionary with key is the function id and value is the result with all the information on time, environment, etc. contained as values
+    # Format the results
     formatted_results = []
     dict_results = {}
     for result in results:
@@ -125,11 +140,10 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
         top3_results = [(categories[top3_catid[i]], top3_prob[i].item()) for i in range(top3_prob.size(0))]
         
         formatted_result = f"Function ID: {result['func_id']} \n Results: {top3_results} \n Execution Time: {result['time_execution']}\nEnvironment: {result['environment']} \n"
-        # save the result, time execution, time submission, time completion, environment to a dictionary
-        # calculate the difference between the submission time and completion time
+        
+        # Calculate the time difference between submission and completion
         diff_time = completion_times[result['func_id']] - submission_times[result['func_id']]
 
-        # csave the times as strings
         dict_results[result['func_id']] = {
             "result": top3_results,
             "time_execution_function": result['time_execution'],
@@ -137,7 +151,7 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
             "end_time": str(result['end_time']),
             "submission_time": str(submission_times[result['func_id']]),
             "completion_time": str(completion_times[result['func_id']]),
-            "time_difference": str(diff_time),
+            "duration_completion": str(diff_time),
             "environment": result['environment']
             
         }

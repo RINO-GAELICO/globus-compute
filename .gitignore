@@ -13,3 +13,11 @@
 results_*
 
 time_*
+
+# directory called hello_idl_its_me_globus and all its content
+hello_idl_its_me_globus/
+
+# ignore file that starts with cmds_ 
+cmds_*
+
+
