@@ -4,8 +4,26 @@ from globus_compute_sdk import Executor
 import json
 from dotenv import load_dotenv
 import os
+import sys
 
-ENV_PATH = "./globus_torch.env"
+# If no arguments are provided, it will raise an error
+if len(sys.argv) < 3:
+    raise ValueError("Please provide the number of functions to run and the endpoint name")
+
+# Number of functions to run
+NUMBER_OF_FUNCTIONS = int(sys.argv[1])
+
+# if no number of functions is provided, it will raise an error
+if NUMBER_OF_FUNCTIONS is None:
+    raise ValueError("Please provide the number of functions to run")
+
+ENDPOINT_NAME = sys.argv[2]
+
+ENV_PATH = "./" + ENDPOINT_NAME + ".env"
+
+# if the path is not correct, it will raise an error
+if not os.path.exists(ENV_PATH):
+    raise FileNotFoundError(f"File {ENV_PATH} not found")
 load_dotenv(dotenv_path=ENV_PATH)
 
 c= Client(code_serialization_strategy=CombinedCode())

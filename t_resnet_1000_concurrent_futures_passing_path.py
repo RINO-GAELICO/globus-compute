@@ -8,8 +8,9 @@ import datetime
 import os
 import torch
 import sys
+from time import perf_counter
 
-NUM_ITERATIONS = 100
+NUM_ITERATIONS = 5
 
 # If no arguments are provided, it will raise an error
 if len(sys.argv) < 3:
@@ -139,26 +140,23 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
     submission_times = {}
     completion_times = {}
     results = []
-    image_path = 'dog.jpg'
     
     
+    default_image_path = "images/0.jpg"
     # start with a warm up function
-    warm_up_future = gce.submit(infer_image, image_path, -1)
+    warm_up_future = gce.submit(infer_image, default_image_path, -1)
     warm_up_result = warm_up_future.result()
     print(f"First warm up function completed at {datetime.datetime.now()}")
-    warm_up_future = gce.submit(infer_image, image_path, -1)
-    # warm_up_result = warm_up_future.result()
-    # print(f"Second warm up function completed at {datetime.datetime.now()}")
-    # warm_up_future = gce.submit(infer_image, image_path, -1)
-    # warm_up_result = warm_up_future.result()
-    # print(f"Third warm up function completed at {datetime.datetime.now()}")
     
     all_results = {}
+    all_throughputs_results = {}
     
     for iteration in range(NUM_ITERATIONS):
-        # start
+        # start timing for throughput
+        t_0 = perf_counter()
         for i in range(NUMBER_OF_FUNCTIONS):
-            submission_time = datetime.datetime.now()
+            image_path = f"images/{i}.jpg"
+            submission_time = perf_counter()
             future = gce.submit(infer_image, image_path, i)
             futures_addresses.append(future)
             submission_times.update({i: submission_time})
@@ -166,13 +164,14 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
         # Get the results and record completion times
         for future in concurrent.futures.as_completed(futures_addresses):
             result = future.result()
-            completion_time = datetime.datetime.now()
+            completion_time = perf_counter()
             results.append(result)
             # print(f"Result: {result}")
             # print(f"Future {result['func_id']} completed at {completion_time}")``
             completion_times.update({result['func_id']: completion_time})
         print(f"Iteration {iteration+1} completed at {datetime.datetime.now()}")
-        # stop
+        # stop timing for throughput
+        t_n = perf_counter()
         
         # Use the categories string to get the categories list
         categories = [s.strip() for s in categories_str.splitlines()]
@@ -197,9 +196,9 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
                 "time_execution_function": result['time_execution'],
                 "start_time": str(result['start_time']),
                 "end_time": str(result['end_time']),
-                "submission_time": str(submission_times[result['func_id']]),
-                "completion_time": str(completion_times[result['func_id']]),
-                "duration_completion": str(diff_time),
+                "submission_time": submission_times[result['func_id']],
+                "completion_time": completion_times[result['func_id']],
+                "duration_completion": diff_time,
                 "node_name": result['node_name'],
                 "time_execution_cuda": result['time_execution_cuda'],
                 
@@ -210,15 +209,29 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
         # Store the results for this iteration
         all_results[iteration] = dict_results
         
+        throughput = NUMBER_OF_FUNCTIONS / (t_n - t_0)
+        print(f"Throughput: {throughput} functions per second")
+        throughputs_results = {
+            "throughput": throughput,
+            "start_time": t_0,
+            "end_time": t_n
+        }
+        
+        all_throughputs_results[iteration] = throughputs_results
+        
         # # Print all results
         # for i in range(NUMBER_OF_FUNCTIONS):
         #     print(f"Future {i+1}: Submitted at {submission_times[i]}, Completed at {completion_times[i]}, Node used: {results[i]['node_name']}, Result: {formatted_results[i]}")
         
 
-    output_file_name = "./results_error_bands/results_pytorch_concurrent_{}_{}.json".format(NUMBER_OF_FUNCTIONS, ENDPOINT_NAME)
-    with open(output_file_name, "w") as f:
+    output_file_name_functions_resutls = "./results_throughput/4_node_results_pytorch_concurrent_{}_{}_64_proc.json".format(NUMBER_OF_FUNCTIONS, ENDPOINT_NAME)
+    with open(output_file_name_functions_resutls, "w") as f:
         json.dump(all_results, f)
+    output_file_name_throughput = "./results_throughput/4_node_throughput_pytorch_concurrent_{}_{}_64_proc.json".format(NUMBER_OF_FUNCTIONS, ENDPOINT_NAME)
+    with open(output_file_name_throughput, "w") as f:
+        json.dump(all_throughputs_results, f)
     
-    print("All results saved to file: {}".format(output_file_name))
+    print("All results saved to file: {}".format(output_file_name_functions_resutls))
+    print("All throughputs saved to file: {}".format(output_file_name_throughput))
 
 

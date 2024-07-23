@@ -20,4 +20,10 @@ hello_idl_its_me_globus/
 # ignore file that starts with cmds_ 
 cmds_*
 
+*.yaml
+
+images/
+
+*.jpg
+
 
