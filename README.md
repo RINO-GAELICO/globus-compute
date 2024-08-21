@@ -8,7 +8,7 @@ Initial experiments were conducted using a ResNet PyTorch inference model that m
 
 A second stage of experiments was conducted by executing a function that runs Ion Orbiter executables. This code simulates particle trajectories and determines their hit locations on the tokamak wall.
 
-[View the full report](docs/report.pdf).
+![Page 1](./docs/Rocca.Duccio.2024_07_26.poster.png)
 
 More information on how to use Globus Compute at NERSC can be found in NERSC docs.
 
