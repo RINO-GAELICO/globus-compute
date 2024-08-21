@@ -119,9 +119,7 @@ def infer_image(image_path, func_id):
         "node_name": node_name,
         "time_execution_cuda": curr_time
     }
-    
-    
-    
+
         
     
 def read_file_to_string(file_path):
@@ -181,6 +179,7 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
         dict_results = {}
         
         for result in results:
+            
             probabilities = torch.tensor(result['probabilities'])
             top3_prob, top3_catid = torch.topk(probabilities, 3)
             top3_results = [(categories[top3_catid[i]], top3_prob[i].item()) for i in range(top3_prob.size(0))]

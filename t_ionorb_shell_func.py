@@ -1,6 +1,7 @@
 from globus_compute_sdk.serialize import CombinedCode
 from globus_compute_sdk import Client
 from globus_compute_sdk import Executor
+from globus_compute_sdk.sdk.shell_function import ShellFunction
 import json
 from dotenv import load_dotenv
 import os
@@ -21,7 +22,7 @@ if not os.path.exists(ENV_PATH):
     raise FileNotFoundError(f"File {ENV_PATH} not found")
 load_dotenv(dotenv_path=ENV_PATH)
 
-c= Client(code_serialization_strategy=CombinedCode())
+gcc= Client(code_serialization_strategy=CombinedCode())
     
 #  run directory /pscratch/sd/d/duccio/ionorb/batch_shot_163303/100
 def ionorb_wrapper(run_directory, bin_path, config_path="ionorb_stl2d_boris.config", outfile="out.hits.els.txt"):
@@ -50,21 +51,68 @@ def ionorb_wrapper(run_directory, bin_path, config_path="ionorb_stl2d_boris.conf
             os.makedirs(os.path.join(run_directory,"outputs"))
             shutil.copyfile(outfile,os.path.join(run_directory,"outputs",outfile))
         return res.returncode, res.stdout.decode("utf-8"), res.stderr.decode("utf-8"), runtime
-
+    
 
 perlmutter_endpoint = os.getenv("ENDPOINT_ID")
 # ... then create the executor, ...
 
-with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
+
+
+# Define parameters
+run_directory = "/pscratch/sd/d/duccio/ionorb/batch_shot_163303/0000"
+bin_path = "/pscratch/sd/d/duccio/ionorb/ionorb_stl_boris2d"
+config_path = "ionorb_stl2d_boris.config"
+outfile = "out.hits.els.txt"
+
+# Construct the shell command as a single string
+shell_command = f"""
+#!/bin/bash
+
+# Change to the run directory
+cd {run_directory}
+
+# Create symlinks for STL files if none are present
+if [ -z "$(ls *.stl 2>/dev/null)" ] && [ -z "$(ls *.STL 2>/dev/null)" ]; then
+    stl_files=$(find {bin_path} -name '*.stl' -o -name '*.STL')
+    for stl_file in $stl_files; do
+        stl_file_name=$(basename "$stl_file")
+        ln -s "$stl_file" "$run_directory/$stl_file_name"
+    done
+fi
+
+# Run the command
+command="/pscratch/sd/d/duccio/ionorb/ionorb_stl_boris2d {config_path}"
+$command > stdout.log 2> stderr.log
+returncode=$?
+
+# Check if the command failed
+if [ $returncode -ne 0 ]; then
+    echo "Application failed with non-zero return code: $returncode"
+    echo "stdout=$(cat stdout.log)"
+    echo "stderr=$(cat stderr.log)"
+    echo "runtime=$((end - start))"
+    exit $returncode
+else
+    mkdir -p "$run_directory/outputs"
+    cp "$outfile" "$run_directory/outputs/$outfile"
+    echo "returncode=$returncode"
+    echo "stdout=$(cat stdout.log)"
+    echo "stderr=$(cat stderr.log)"
+    echo "runtime=$((end - start))"
+fi
+"""
+
+with Executor(endpoint_id=perlmutter_endpoint, funcx_client=gcc) as gce:
+    
     all_throughputs_results = {}
     all_results = {}
     
-    print("Starting warm up", flush=True)
-    # warm up
-    warm_up_future = gce.submit(ionorb_wrapper, "/pscratch/sd/d/duccio/ionorb/batch_shot_163303/0000", '/pscratch/sd/d/duccio/ionorb/ionorb_stl_boris2d')
-    warm_up_result = warm_up_future.result()
+    # print("Starting warm up", flush=True)
+    # # warm up
+    # warm_up_future = gce.submit(ionorb_wrapper, "/pscratch/sd/d/duccio/ionorb/batch_shot_163303/0000", '/pscratch/sd/d/duccio/ionorb/ionorb_stl_boris2d')
+    # warm_up_result = warm_up_future.result()
     
-    print("Warm up completed", flush=True)
+    # print("Warm up completed", flush=True)
     
     for iteration in range(NUM_ITERATIONS):
     
@@ -73,9 +121,15 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
         bin_path = '/pscratch/sd/d/duccio/ionorb/ionorb_stl_boris2d'
         # start timing for throughput
         t_0 = perf_counter()
-        for i in range(NUM_FUNCTIONS+1):
+        for i in range(NUM_FUNCTIONS):
+            
             directory_path = f"/pscratch/sd/d/duccio/ionorb/batch_shot_163303/{str(i).zfill(4)}"
-            future = gce.submit(ionorb_wrapper, directory_path, bin_path)
+            
+            bf = ShellFunction(shell_command)
+            future = gce.submit(bf)  # Invokes this method on an endpoint
+            # future.result()               # returns a ShellResult
+            
+            # future = gce.submit(ionorb_wrapper, directory_path, bin_path)
             futures_addresses.append(future)
         results = []
         for future in concurrent.futures.as_completed(futures_addresses):
@@ -84,6 +138,8 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
         t_n = perf_counter()
         
         all_results[iteration] = results
+        print(f"Results for iteration {iteration} collected", flush=True)
+        print(f"Results: {results}", flush=True)
         
         # THROUGHPUT CALC
         throughput = NUM_FUNCTIONS / (t_n - t_0)
@@ -98,12 +154,16 @@ with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
         
         
     # save the results in a file
-    output_file_name_functions_results = "./results_ionorb/8_node_results_ionorb_{}_{}_128_proc.json".format(NUM_FUNCTIONS, ENDPOINT_NAME)
+    output_file_name_functions_results = "./results_throughput/1_node_results_ionorb_{}_{}_SHELL.json".format(NUM_FUNCTIONS, ENDPOINT_NAME)
+    
     with open(output_file_name_functions_results, "w") as f:
         json.dump(all_results, f)
+        
     # save the throughput results in a file
-    output_file_name_throughput = "./results_ionorb/throughput/8_node_throughput_ionorb_{}_{}_128_proc.json".format(NUM_FUNCTIONS, ENDPOINT_NAME)
+    output_file_name_throughput = "./results_throughput/throughput/1_node_throughput_ionorb_{}_{}_SHELL.json".format(NUM_FUNCTIONS, ENDPOINT_NAME)
+    
     with open(output_file_name_throughput, "w") as f:
         json.dump(all_throughputs_results, f)
+        
     print("Results saved in {}".format(output_file_name_functions_results))
     print("Throughput results saved in {}".format(output_file_name_throughput))

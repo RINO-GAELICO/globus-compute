@@ -1,19 +1,16 @@
-To use globus-compute, follow these steps:
+# Globus Compute at NERSC
 
-1. Install the Globus CLI by running the following command: `pip install globus-cli`.
+This repo contains a series of experiments that have been executed during the summer of 2024.
 
-2. Authenticate with Globus by running `globus login` and following the prompts to log in with your Globus credentials.
+Mainly concerning runtime and throughput, the experiments have deployed Python functions to an endpoint installed in the NERSC system.
 
-3. Create a new compute endpoint by running `globus endpoint create --personal`.
+Initial experiments were conducted using a ResNet PyTorch inference model that makes use of GPUs to classify images provided to it.
 
-4. Connect to your compute endpoint by running `globus endpoint connect <endpoint_id>` where `<endpoint_id>` is the ID of your compute endpoint.
+A second stage of experiments was conducted by executing a function that runs Ion Orbiter executables. This code simulates particle trajectories and determines their hit locations on the tokamak wall.
 
-5. Upload your compute script or files to the compute endpoint using `globus transfer <source_path> <destination_endpoint_id>:<destination_path>`.
+[View the full report](docs/report.pdf).
 
-6. Submit a compute task by running `globus task create --name <task_name> --endpoint <endpoint_id> --command <command>` where `<task_name>` is the name of your task, `<endpoint_id>` is the ID of your compute endpoint, and `<command>` is the command to execute on the compute endpoint.
+More information on how to use Globus Compute at NERSC can be found in NERSC docs.
 
-7. Monitor the status of your compute task by running `globus task show <task_id>` where `<task_id>` is the ID of your compute task.
 
-8. Retrieve the output files from your compute task by running `globus transfer <source_endpoint_id>:<source_path> <destination_path>`.
 
-Remember to replace `<endpoint_id>`, `<task_name>`, `<command>`, `<task_id>`, `<source_path>`, and `<destination_path>` with the appropriate values for your setup.

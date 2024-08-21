@@ -9,6 +9,8 @@
 
 .DS_Store
 
+.venv/
+
 # ignore all file that starts with results_
 results_*
 

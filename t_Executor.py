@@ -18,7 +18,7 @@ c= Client(code_serialization_strategy=CombinedCode())
 def add_func(a, b):
     return a * b
 
-tutorial_endpoint_id = '4b116d3c-1703-4f8f-9f6f-39921e5864df' # Public tutorial endpoint
+tutorial_endpoint_id = '<ENDPOINT_ID>'
 # ... then create the executor, ...
 with Executor(endpoint_id=perlmutter_endpoint, funcx_client=c) as gce:
     # ... then submit for execution, ...
